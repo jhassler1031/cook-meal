@@ -7,6 +7,7 @@ class Recipe:
     def __init__(self, name, ingredients):
         self.name = name
         self.ingredients_needed = ingredients
+        self.count = 0
 
     def __repr__(self):
         return self.name
@@ -25,44 +26,12 @@ class Recipe:
 
     def safe_to_eat(self, eater):
         if eater.allergy in self.ingredients_needed:
-            print(f"{self.name} is not safe for {eater} to eat!")
+            return False
         else:
-            print(f"{eater} can chow down on some {self.name}!")
-
-    def prepare_meal(self, chef):
-
-        if self.has_ingredients(chef):
-            print(f"{chef} prepares {self.name} and it's ready to eat!")
-            chef.has_ingredients = []
-        else:
-            print(f"{chef} is missing something to make {self.name}.")
-
-
-
-
-#define chef class
-class Chef:
-
-    def __init__(self, name):
-        self.name = name
-        self.has_ingredients = []
-
-    def __repr__(self):
-        return self.name
-
-    def __lt__(self, ingredient):
-        #print(f"{self.name} goes shopping for {ingredient}.")
-        self.has_ingredients.append(ingredient)
-
-    def goes_shopping(self, recipe):
-        print(f"{self.name} goes shopping for the ingredients to make {recipe.name}.")
-
-        for item in recipe.ingredients_needed:
-            self.has_ingredients.append(item)
-
+            return True
 
 #define eater class
-class Eater:
+class Eater():
 
     def __init__(self, name, allergy):
         self.name = name
@@ -71,15 +40,68 @@ class Eater:
     def __repr__(self):
         return self.name
 
+    def eat_meal(self, recipe):
+
+        if not recipe.safe_to_eat(self):
+            print(f"It is not safe for {self.name} to eat {recipe}!")
+        elif recipe.count <= 0:
+            print(f"Sorry, but there isn't any {recipe} prepared for {self.name} to eat.")
+        else:
+            print(f"{self.name} noms on some {recipe}.")
+            recipe.count -= 1
+
+
+#define chef class
+class Chef(Eater):
+
+    def __init__(self, name, allergy):
+        self.has_ingredients = []
+        super().__init__(name, allergy)
+
+    def __repr__(self):
+        return self.name
+
+    def __lt__(self, ingredient):
+        self.has_ingredients.append(ingredient)
+
+    def goes_shopping(self, recipe):
+        print(f"{self.name} goes shopping for the ingredients to make {recipe.name}.")
+
+        for item in recipe.ingredients_needed:
+            self.has_ingredients.append(item)
+
+    def prepare_meal(self, recipe):
+        if recipe.has_ingredients(self):
+            print(f"{self.name} prepares {recipe} and it's ready to eat!")
+            self.has_ingredients = []
+            recipe.count += 1
+        else:
+            print(f"{self.name} is missing something to make {recipe}.")
+
+
+
+
+
 
 #start program
 ramen_noodles = Recipe("Ramen Noodles", ["noodles", "water", "eggs"])
 pb_and_j = Recipe("PB and J", ["bread", "peanut butter", "jelly"])
-chef_john = Chef("John")
+chef_john = Chef("John", None)
 chris = Eater("Chris", "peanut butter")
-robert = Eater("Robert", "none")
+robert = Eater("Robert", None)
 
 
-ramen_noodles.prepare_meal(chef_john)
+
+chris.eat_meal(pb_and_j)
+chef_john.prepare_meal(pb_and_j)
 chef_john.goes_shopping(ramen_noodles)
-ramen_noodles.prepare_meal(chef_john)
+chef_john.prepare_meal(ramen_noodles)
+chris.eat_meal(ramen_noodles)
+
+robert.eat_meal(pb_and_j)
+chef_john.goes_shopping(pb_and_j)
+chef_john.prepare_meal(pb_and_j)
+chef_john.goes_shopping(pb_and_j)
+chef_john.prepare_meal(pb_and_j)
+robert.eat_meal(pb_and_j)
+chef_john.eat_meal(pb_and_j)
